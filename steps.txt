@@ -1,0 +1,185 @@
+use lsblk to see the pendrive
+format the pendrive -> $sudo mkfs.vfat -F 32 -n "8G_PD" /dev/sda1
+mount it at a new mount location -> $sudo mount /dev/sda1 /mnt/nas_storage/
+change the ownership -> $sudo chown -R piyush:piyush /mnt/nas_storage/
+					-> $sudo chmod -R 755 /mnt/nas_storage/
+automount on reboot -> $sudo blkid ----to get uuid
+					-> $ sudo nano /etc/fstab
+						Add this line:
+						# Automount the NAS drive on startup. Format: <file system> <mount point>   <type>  <options>       <dump>  <pass>
+						UUID=YOUR-UUID-HERE /mnt/nas_storage ext4 defaults 0 2
+
+=> Install samba
+sudo apt install samba
+
+Configure Samba:
+$sudo nano /etc/samba/smb.conf
+-> at very bottom add this config:
+# The name of the share as it will appear on the network
+[PiNAS]
+    # A description for the share
+    comment = Raspberry Pi NAS
+    # The absolute path to the mounted storage directory
+    path = /mnt/nas_storage
+    # Allow users to read and write to the share
+    read only = no
+    # Make the share visible when browsing the network
+    browsable = yes
+    # Only allow authenticated users (disables guest access)
+    guest ok = no
+    # Force newly created files to have these permissions (rw-r--r--)
+    create mask = 0644
+    # Force newly created directories to have these permissions (rwxr-xr-x)
+    directory mask = 0755
+    
+-> setup samba password:
+# Add the user 'ubuntu' to the Samba database and prompt for a new password
+sudo smbpasswd -a ubuntu
+
+# Restart the Samba service to apply all the new configurations
+sudo systemctl restart smbd
+
+=> setup reverse tunnel using Tailscale
+# Download and execute the official Tailscale installation script
+curl -fsSL https://tailscale.com/install.sh | sh
+
+# Start Tailscale and authenticate the device to your network
+sudo tailscale up
+
+Note: The tailscale up command will output a URL. Click it to log in and authenticate your Raspberry Pi to your Tailscale network.
+
+# Display the Tailscale IP address assigned to this device
+tailscale ip -4
+
+#### Keep note of this 100.x.x.x address. This is how you will access the NAS from outside your home.
+
+How to access:
+On Windows: Open File Explorer, type \\100.x.x.x\PiNAS in the address bar, and enter your Samba username and password.
+
+On macOS: Open Finder, press Cmd + K, type smb://100.x.x.x/PiNAS, and connect.
+
+On Linux: Open your file manager and use smb://100.x.x.x/PiNAS.
+
+
+=> To get web-like interface for this:
+Since you are setting this up on a Raspberry Pi, the cleanest and most efficient way to install Nextcloud is by using Docker. Given your background in deploying models and working with complex systems, you might already be familiar with containerization, but even if you aren't, it keeps Nextcloud perfectly isolated from your base Ubuntu system.
+
+-> Install Docker and docker compose
+# Update your package list to ensure you get the latest versions
+sudo apt update
+
+# Install Docker and the Docker Compose plugin
+sudo apt install docker.io docker-compose-v2 -y
+
+# Add your user 'piyush' to the docker group so you don't need 'sudo' for every docker command
+sudo usermod -aG docker piyush
+
+# Apply the new group membership immediately without needing to log out and log back in
+newgrp docker
+
+-> To get UID and GID
+$id piyush
+
+-> Create docker config
+# Create a new directory to hold your Nextcloud configuration files
+mkdir ~/nextcloud-server
+
+# Move into that new directory
+cd ~/nextcloud-server
+
+# Open a new file called docker-compose.yml in the nano text editor
+nano docker-compose.yml
+
+-> Paste the following configuration into the file. Make sure to change the PUID and PGID if yours were different from 1000.
+
+# Specify the Docker Compose file format version
+version: "3"
+
+# Define the containers (services) we want to run
+services:
+  # Name of the service
+  nextcloud:
+    # Use the linuxserver image, which makes handling file permissions much easier
+    image: lscr.io/linuxserver/nextcloud:latest
+    # Name the container so it is easy to find later
+    container_name: nextcloud
+    # Define the environment variables the container needs to run correctly
+    environment:
+      # Set this to your 'piyush' UID (usually 1000) so Nextcloud owns the files it creates
+      - PUID=1000
+      # Set this to your 'piyush' GID (usually 1000)
+      - PGID=1000
+      # Set your local time zone (India Standard Time)
+      - TZ=Asia/Kolkata
+    # Map network ports so you can access the web interface
+    ports:
+      # Map port 8080 on your Raspberry Pi to port 80 inside the container
+      - 8080:80
+    # Map physical folders on your Pi to virtual folders inside the container
+    volumes:
+      # Store Nextcloud's internal app data locally so it persists across reboots
+      - ./config:/config
+      # IMPORTANT: Map your external NAS drive to be the main storage folder for Nextcloud
+      - /mnt/nas_storage:/data
+    # Tell Docker to always restart this container if the Pi reboots or crashes
+    restart: unless-stopped
+    
+-> Launch Nextcloud
+$docker compose up -d
+
+
+check nextcloud port with:
+docker ps
+got to the browser -> http://<tailscale ip>:<nextcloud port>
+
+
+
+
+making things faster and reliable (Redis):
+In the screenshot you shared earlier, you had SQLite selected for the database. SQLite stores the entire database in a single file. Every time you try to log in, Nextcloud has to write to that database, which locks the entire file until the operation finishes. On a Raspberry Pi (especially if the operating system is running on a microSD card), this locking process takes too long, the system panics, and the login times out.
+
+To make this significantly lighter and faster, we need to offload that file-locking process into the Pi's RAM by adding Redis to your stack.
+
+-> Update your Docker Compose
+cd ~/nextcloud-server
+nano docker-compose.yml
+
+version: "3"
+services:
+  nextcloud:
+    image: lscr.io/linuxserver/nextcloud:latest
+    container_name: nextcloud
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Asia/Kolkata
+    ports:
+      - 8080:80
+    volumes:
+      - ./config:/config
+      - /mnt/nas_storage:/data
+    restart: unless-stopped
+    depends_on:
+      - redis
+  redis:
+    image: redis:alpine
+    container_name: redis
+    restart: unless-stopped
+    
+    
+-> Apply the changes  
+$ docker compose up -d
+
+-> Config nextcloud to use redis
+nano ~/nextcloud-server/config/www/nextcloud/config/config.php
+
+Scroll to the very bottom of the file. Right above the final ); line, paste the following configuration:
+
+  'memcache.local' => '\\OC\\Memcache\\APCu',
+  'memcache.distributed' => '\\OC\\Memcache\\Redis',
+  'memcache.locking' => '\\OC\\Memcache\\Redis',
+  'redis' => 
+  array (
+    'host' => 'redis',
+    'port' => 6379,
+  ),

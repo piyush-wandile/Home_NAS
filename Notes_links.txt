@@ -1,2 +1,7 @@
-Use Tailscale - mesh VPN OR WireGuard/OpenVPN
-
+Alternates for port forwarding:
+	Use Tailscale - mesh VPN OR WireGuard/OpenVPN
+	Use Reverse Tunnels:
+		Reverse tunneling is a method of securing communication between clients and servers that are behind a firewall. This technique enhances security and simplifies firewall management. When using a reverse tunnel, the server initiates a connection to the client. This tunnel connection is secured by a previously shared keyfile that contains an identity certificate. When established, the reverse tunnel allows bidirectional communication without opening inbound firewall ports.
+		Using a reverse tunnel is the smartest way to access it remotely without having to mess with port forwarding on your router or worrying about dynamic IPs.
+		
+For the file sharing protocol, we'll use Samba (SMB), as it's natively supported by Windows, macOS, and Linux. For the reverse tunnel, I highly recommend Tailscale. It uses WireGuard under the hood to create a secure, peer-to-peer mesh network (effectively a reverse tunnel) that easily traverses NATs and firewalls. Exposing an SMB share directly to the public internet via a traditional reverse proxy (like Cloudflare) is a massive security risk, so Tailscale keeps it securely locked down to your devices only.
