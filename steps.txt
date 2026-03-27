@@ -183,3 +183,13 @@ Scroll to the very bottom of the file. Right above the final ); line, paste the 
     'host' => 'redis',
     'port' => 6379,
   ),
+  
+  
+  
+** Also make sure that the tailscale IP is listed in the '~/nextcloud-server/config/www/nextcloud/config/config.php'
+'trusted_domains' => 
+  array (
+    0 => 'localhost',
+    1 => '100.x.x.x',
+    2 => '192.168.1.50',
+  ),
