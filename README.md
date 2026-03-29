@@ -4,7 +4,6 @@
 ![Docker](https://img.shields.io/badge/Docker-Enabled-blue?logo=docker)
 ![Nextcloud](https://img.shields.io/badge/Nextcloud-Cloud-green?logo=nextcloud)
 ![Tailscale](https://img.shields.io/badge/Tailscale-Secure%20Access-purple)
-![License](https://img.shields.io/badge/License-MIT-yellow)
 
 Turn your Raspberry Pi into a **secure personal NAS + cloud server** with remote access — no port forwarding required.
 
@@ -26,7 +25,6 @@ Turn your Raspberry Pi into a **secure personal NAS + cloud server** with remote
 * [🔒 Security](#-security)
 * [🧪 Troubleshooting](#-troubleshooting)
 * [📈 Future Improvements](#-future-improvements)
-* [📜 License](#-license)
 
 ---
 
@@ -86,7 +84,7 @@ graph TD
 
 ```bash
 lsblk
-sudo mkfs.vfat -F 32 -n "8G_PD" /dev/sda1
+sudo mkfs.ext4 -n "8G_PD" /dev/sda1
 sudo mount /dev/sda1 /mnt/nas_storage/
 sudo chown -R $USER:$USER /mnt/nas_storage/
 sudo chmod -R 755 /mnt/nas_storage/
@@ -101,7 +99,7 @@ sudo blkid
 Add to `/etc/fstab`:
 
 ```
-UUID=YOUR-UUID-HERE /mnt/nas_storage ext4 defaults 0 2
+UUID=STORAGE-UUID-HERE /mnt/nas_storage ext4 defaults 0 2
 ```
 
 ---
@@ -197,7 +195,7 @@ array (
 
 ---
 
-## 🌐 Accessing Your NAS
+## 🌐 Accessing the NAS
 
 | Platform | Method                       |
 | -------- | ---------------------------- |
@@ -207,23 +205,6 @@ array (
 | Browser  | `http://<tailscale-ip>:8080` |
 
 ---
-
-## 📸 Screenshots
-
-> 📌 Add your screenshots here
-
-```
-/screenshots
-  ├── nextcloud-dashboard.png
-  ├── samba-share.png
-  ├── tailscale-dashboard.png
-```
-
-Example:
-
-```markdown
-![Nextcloud UI](screenshots/nextcloud-dashboard.png)
-```
 
 ---
 
@@ -236,7 +217,7 @@ Example:
 
 ---
 
-## 🧪 Troubleshooting
+## 🧪 Common Issues
 
 | Issue                  | Solution                              |
 | ---------------------- | ------------------------------------- |
@@ -246,10 +227,3 @@ Example:
 | Cannot access remotely | Verify Tailscale connection           |
 
 ---
-
-## 📈 Future Improvements
-
-* 📱 Mobile app integration
-* ☁️ Backup to cloud (rclone)
-* 🔄 RAID / multiple drives
-* 📊 Monitoring dashboard (Grafana)
