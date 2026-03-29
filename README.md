@@ -1,4 +1,4 @@
-# 🚀 Raspberry Pi Personal NAS & Cloud Server
+# Raspberry Pi Personal NAS & Cloud Server
 
 ![Raspberry Pi](https://img.shields.io/badge/Raspberry%20Pi-NAS-red?logo=raspberrypi)
 ![Docker](https://img.shields.io/badge/Docker-Enabled-blue?logo=docker)
@@ -11,30 +11,28 @@ Turn your Raspberry Pi into a **secure personal NAS + cloud server** with remote
 
 ## 📌 Table of Contents
 
-* [✨ Features](#-features)
-* [🧱 System Architecture](#-system-architecture)
-* [⚙️ Tech Stack](#️-tech-stack)
-* [🛠️ Installation Guide](#️-installation-guide)
+* [Features](#-features)
+* [System Architecture](#-system-architecture)
+* [Tech Stack](#️-tech-stack)
+* [Installation Guide](#️-installation-guide)
 
   * [1. Storage Setup](#1-storage-setup)
   * [2. Samba Setup](#2-samba-setup)
   * [3. Tailscale Setup](#3-tailscale-setup)
   * [4. Nextcloud + Redis (Docker)](#4-nextcloud--redis-docker)
-* [🌐 Accessing Your NAS](#-accessing-your-nas)
-* [📸 Screenshots](#-screenshots)
-* [🔒 Security](#-security)
-* [🧪 Troubleshooting](#-troubleshooting)
-* [📈 Future Improvements](#-future-improvements)
+* [Accessing Your NAS](#-accessing-your-nas)
+* [Security](#-security)
+* [Common Isssues](#-troubleshooting)
 
 ---
 
 ## ✨ Features
 
-* 📂 Local file sharing via **Samba (SMB)**
-* ☁️ Personal cloud using **Nextcloud**
-* 🔐 Secure remote access via **Tailscale (WireGuard)**
-* ⚡ Faster performance using **Redis caching**
-* 🐳 Docker-based isolated deployment
+* Local file sharing via **Samba (SMB)**
+* Personal cloud using **Nextcloud**
+* Secure remote access via **Tailscale (WireGuard)**
+* Faster performance using **Redis caching**
+* Docker-based isolated deployment
 
 ---
 
@@ -210,10 +208,10 @@ array (
 
 ## 🔒 Security
 
-* ❌ No port forwarding
-* 🔐 Encrypted WireGuard tunnel via Tailscale
-* 👤 Authenticated SMB access only
-* 🧱 Isolated services using Docker
+* No port forwarding
+* Encrypted WireGuard tunnel via Tailscale
+* Authenticated SMB access only
+* Isolated services using Docker
 
 ---
 
